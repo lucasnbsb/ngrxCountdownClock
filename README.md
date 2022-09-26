@@ -2,26 +2,92 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.3.
 
-## Development server
+This project is also a tutorial for ngrx 14, documenting all the steps necessary
+to implement a countdown clock with ngrx, material and angular
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Installation of dependencies
 
-## Code scaffolding
+assuming angular-cli is installed:
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+adding angular material
 
-## Build
+```
+    ng add @angular/material
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Adding ngrx
 
-## Running unit tests
+```
+    ng add @ngrx/store@latest
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Adding the ngrx schematics to the default collection of schematics from angular-cli to generate the boilerplate faster. Don`t worry about bundle size, ngadd knows to set it up as a dev dependency
 
-## Running end-to-end tests
+```
+ng add @ngrx/schematics@latest
+```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## creating the clock
 
-## Further help
+We start with a simple interface defining the state of the clock.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+```
+mkdir src/app/entity
+touch src/app/entity/clock.ts
+```
+
+Then we create the actions for the clock, that is also the time to decide what methods will our store support, `--flat false` tells the schematic to put the action in a folder called clock ( might also ignore and let the actions be in a folder called actions, your choice here)
+
+```
+ng g action clock --flat false
+```
+
+this results in the following file:
+
+```typescript
+import { createAction, props } from "@ngrx/store";
+
+export const loadClocks = createAction("[Clock] Load Clocks");
+```
+
+we then add some simple actions and create a reducer
+
+```
+ng generate reducer clock --group true --module app.module.ts
+```
+
+this also sets up the app module with a store for the clock feature. and results in the scaffolding of a reducer:
+
+```typescript
+import { Action, createReducer, on } from "@ngrx/store";
+
+export const clockFeatureKey = "clock";
+
+export interface State {}
+
+export const initialState: State = {};
+
+export const reducer = createReducer(initialState);
+```
+
+we modify the reducer to use our entity and link up the actions. and then create a selector
+
+```
+ng g selector clock --group true
+```
+
+```typescript
+import { createFeatureSelector, createSelector } from "@ngrx/store";
+import { Clock } from "../entities/clock";
+import { clockFeatureKey } from "../reducers/clock.reducer";
+
+// here we select the state by the feature key
+export const selectClock =
+  createFeatureSelector<Readonly<Clock>>(clockFeatureKey);
+```
+
+and finally a component to use the store and display the clock
+
+```
+ng g c clock
+```
