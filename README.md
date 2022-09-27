@@ -1,7 +1,8 @@
 # NgrxCountdownClock
 
-This repo is a little tutorial for ngrx 14 and ngrx/schematics, documenting all the steps necessary
-to implement a countdown clock with ngrx and angular
+This repo is a tutorial for ngrx 14 and ngrx/schematics, documenting all the steps necessary to implement a countdown clock with ngrx and angular.
+
+ps: you should not be updating the store at every ui change (https://github.com/ngrx/store/issues/172), this is just an example,
 
 ## Installation of dependencies
 
