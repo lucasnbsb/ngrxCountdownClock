@@ -1,19 +1,11 @@
 # NgrxCountdownClock
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.3.
-
-This project is also a tutorial for ngrx 14, documenting all the steps necessary
-to implement a countdown clock with ngrx, material and angular
+This repo is a little tutorial for ngrx 14 and ngrx/schematics, documenting all the steps necessary
+to implement a countdown clock with ngrx and angular
 
 ## Installation of dependencies
 
 assuming angular-cli is installed:
-
-adding angular material
-
-```
-    ng add @angular/material
-```
 
 Adding ngrx
 
@@ -27,7 +19,7 @@ Adding the ngrx schematics to the default collection of schematics from angular-
 ng add @ngrx/schematics@latest
 ```
 
-## creating the clock
+## Creating the clock
 
 We start with a simple interface defining the state of the clock.
 
@@ -50,7 +42,28 @@ import { createAction, props } from "@ngrx/store";
 export const loadClocks = createAction("[Clock] Load Clocks");
 ```
 
-we then add some simple actions and create a reducer
+we then add some simple actions,
+
+```typescript
+import { createAction, props } from "@ngrx/store";
+
+export const setClock = createAction(
+  "[Clock] Set Clock",
+  props<{ minutes: number; seconds: number }>()
+);
+
+export const resetClock = createAction(
+  "[Clock] Reset Clock",
+  props<{ minutes: number; seconds: number }>()
+);
+
+// no props needed, just sets isRunning = true
+export const startClock = createAction("[Clock] Start Clock");
+
+export const stopClock = createAction("[Clock] Stop Clock");
+```
+
+and create a reducer
 
 ```
 ng generate reducer clock --group true --module app.module.ts
@@ -70,7 +83,53 @@ export const initialState: State = {};
 export const reducer = createReducer(initialState);
 ```
 
-we modify the reducer to use our entity and link up the actions. and then create a selector
+note that `--module app.module.ts` sets up a index.ts file in the reducer directory that you can use to organize your reducers, i just used it in a feature store.
+
+We then link up the actions in the reducer, the `...state` should be there even if you are overiding the whole state
+because eventually you might want to change the shape of the state.
+
+Also note how we import the actions for clarity
+
+```typescript
+import * as fromClockActions from "./../clock/clock.actions";
+import { createReducer, on } from "@ngrx/store";
+import { Clock } from "../entities/clock";
+
+export const clockFeatureKey = "clock";
+
+export const initialState: Clock = {
+  isRunning: false,
+  minutes: 10,
+  seconds: 0,
+};
+
+export const reducer = createReducer(
+  initialState,
+  on(fromClockActions.stopClock, (state) => ({
+    ...state,
+    isRunning: false,
+  })),
+  on(fromClockActions.startClock, (state) => ({
+    ...state,
+    isRunning: true,
+  })),
+  // even though we overwrite the whole state, we still copy the last state for future proofing in case we change the state
+  on(fromClockActions.resetClock, (state, { minutes, seconds }) => ({
+    ...state,
+    isRunning: false,
+    minutes: minutes,
+    seconds: seconds,
+  })),
+  on(fromClockActions.setClock, (state, { minutes, seconds }) => ({
+    ...state,
+    minutes: minutes,
+    seconds: seconds,
+  }))
+);
+```
+
+We then create a selector for the clock state. Take good care of your feature key. We put it in the reducer as a constant,
+you might want to put it somewhere else
 
 ```
 ng g selector clock --group true
@@ -90,4 +149,23 @@ and finally a component to use the store and display the clock
 
 ```
 ng g c clock
+```
+
+the `clock.component.ts` file has been anotated with the important parts.
+
+The view is pretty simple, take note how the `clock$` observable is used.
+That is to prevent errors with uninitialized values, also the number formatting pipe
+come in to make the numbers actually look like clock numbers by setting 2 decimal places as default
+
+```html
+Clock object in store: {{ clock$ | async | json }}
+
+<div *ngIf="clock$ | async as clock">
+  pretty print: {{ clock.minutes | number: "2.0-0" }} : {{ clock.seconds |
+  number: "2.0-0" }}
+</div>
+
+<button (click)="startClock()">start</button>
+<button (click)="stopClock()">stop</button>
+<button (click)="resetClock()">reset</button>
 ```

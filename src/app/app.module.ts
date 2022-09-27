@@ -15,7 +15,7 @@ import { ClockComponent } from './clock/clock.component';
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    StoreModule.forRoot({}),
+    StoreModule.forRoot({}), // this is necessary. Go ahead, take it off.
     StoreModule.forFeature(fromClock.clockFeatureKey, fromClock.reducer),
   ],
   providers: [],
