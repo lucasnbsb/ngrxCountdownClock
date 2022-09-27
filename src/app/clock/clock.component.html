@@ -2,8 +2,8 @@ Clock object in store:
 {{ clock$ | async | json }}
 
 <div *ngIf="clock$ | async as clock">
-  pretty print: {{ clock.minutes | number: "2.0-0" }} :
-  {{ clock.seconds | number: "2.0-0" }}
+  pretty print: {{ formatRemainingAsMinutes(remaining) | number: "2.0-0" }} :
+  {{ formatRemainingAsSeconds(remaining) | number: "2.0-0" }}
 </div>
 
 <button (click)="startClock()">start</button>

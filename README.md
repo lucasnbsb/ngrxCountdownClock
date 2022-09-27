@@ -2,8 +2,6 @@
 
 This repo is a tutorial for ngrx 14 and ngrx/schematics, documenting all the steps necessary to implement a countdown clock with ngrx and angular.
 
-ps: you should not be updating the store at every ui change (https://github.com/ngrx/store/issues/172), this is just an example,
-
 ## Installation of dependencies
 
 assuming angular-cli is installed:
@@ -48,20 +46,20 @@ we then add some simple actions,
 ```typescript
 import { createAction, props } from "@ngrx/store";
 
-export const setClock = createAction(
-  "[Clock] Set Clock",
-  props<{ minutes: number; seconds: number }>()
+// no props needed, just sets isRunning = false
+export const stopClock = createAction(
+  "[Clock] Stop Clock",
+  props<{ elapsed: number }>()
 );
-
-export const resetClock = createAction(
-  "[Clock] Reset Clock",
-  props<{ minutes: number; seconds: number }>()
-);
-
 // no props needed, just sets isRunning = true
 export const startClock = createAction("[Clock] Start Clock");
 
-export const stopClock = createAction("[Clock] Stop Clock");
+export const setClock = createAction(
+  "[Clock] Set Clock",
+  props<{ elapsed: number; duration: number }>()
+);
+
+export const resetClock = createAction("[Clock] Reset Clock");
 ```
 
 and create a reducer
@@ -100,31 +98,31 @@ export const clockFeatureKey = "clock";
 
 export const initialState: Clock = {
   isRunning: false,
-  minutes: 10,
-  seconds: 0,
+  durationSeconds: 60 * 5,
+  elapsedSeconds: 0,
 };
 
 export const reducer = createReducer(
   initialState,
-  on(fromClockActions.stopClock, (state) => ({
+  on(fromClockActions.stopClock, (state, { elapsed }) => ({
     ...state,
     isRunning: false,
+    elapsedSeconds: elapsed,
   })),
   on(fromClockActions.startClock, (state) => ({
     ...state,
     isRunning: true,
   })),
-  // even though we overwrite the whole state, we still copy the last state for future proofing in case we change the state
-  on(fromClockActions.resetClock, (state, { minutes, seconds }) => ({
+  on(fromClockActions.resetClock, (state) => ({
     ...state,
     isRunning: false,
-    minutes: minutes,
-    seconds: seconds,
+    elapsedSeconds: 0,
   })),
-  on(fromClockActions.setClock, (state, { minutes, seconds }) => ({
+  on(fromClockActions.setClock, (state, { elapsed, duration }) => ({
     ...state,
-    minutes: minutes,
-    seconds: seconds,
+    isRunning: false,
+    elapsedSeconds: elapsed,
+    durationSeconds: duration,
   }))
 );
 ```
@@ -152,7 +150,7 @@ and finally a component to use the store and display the clock
 ng g c clock
 ```
 
-the `clock.component.ts` file has been anotated with the important parts.
+the `clock.component.ts` file has been anotated with the important concepts.
 
 The view is pretty simple, take note how the `clock$` observable is used.
 That is to prevent errors with uninitialized values, also the number formatting pipe
@@ -162,8 +160,8 @@ come in to make the numbers actually look like clock numbers by setting 2 decima
 Clock object in store: {{ clock$ | async | json }}
 
 <div *ngIf="clock$ | async as clock">
-  pretty print: {{ clock.minutes | number: "2.0-0" }} : {{ clock.seconds |
-  number: "2.0-0" }}
+  pretty print: {{ formatRemainingAsMinutes(remaining) | number: "2.0-0" }} : {{
+  formatRemainingAsSeconds(remaining) | number: "2.0-0" }}
 </div>
 
 <button (click)="startClock()">start</button>

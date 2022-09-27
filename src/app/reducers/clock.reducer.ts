@@ -6,30 +6,31 @@ export const clockFeatureKey = 'clock';
 
 export const initialState: Clock = {
   isRunning: false,
-  minutes: 10,
-  seconds: 0,
+  durationSeconds: 60 * 5,
+  elapsedSeconds: 0,
 };
 
 export const reducer = createReducer(
   initialState,
-  on(fromClockActions.stopClock, (state) => ({
+  on(fromClockActions.stopClock, (state, { elapsed }) => ({
     ...state,
     isRunning: false,
+    elapsedSeconds: elapsed,
   })),
   on(fromClockActions.startClock, (state) => ({
     ...state,
     isRunning: true,
   })),
   // even though we overwrite the whole state, we still copy the last state for future proofing in case we change the state
-  on(fromClockActions.resetClock, (state, { minutes, seconds }) => ({
+  on(fromClockActions.resetClock, (state) => ({
     ...state,
     isRunning: false,
-    minutes: minutes,
-    seconds: seconds,
+    elapsedSeconds: 0,
   })),
-  on(fromClockActions.setClock, (state, { minutes, seconds }) => ({
+  on(fromClockActions.setClock, (state, { elapsed, duration }) => ({
     ...state,
-    minutes: minutes,
-    seconds: seconds,
+    isRunning: false,
+    elapsedSeconds: elapsed,
+    durationSeconds: duration,
   }))
 );

@@ -1,5 +1,5 @@
 export interface Clock {
   isRunning: boolean;
-  minutes: number;
-  seconds: number;
+  durationSeconds: number;
+  elapsedSeconds: number;
 }
